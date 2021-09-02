@@ -5,15 +5,19 @@ from google.cloud import storage
 # use to get current time
 import calendar
 import datetime
+# use for json
+import json
 
-# praw setup
+# chunk of comments to send to cloud storage
+chuckOfComments = []
+
 reddit = praw.Reddit(
     # create a script app on reddit.com to get these values
-    client_id="",
-    client_secret="",
-    password="",
-    user_agent="",
-    username="",
+    client_id="Sebmbo0V4E9LKBEHo0NK6A",
+    client_secret="1dgyT3OUVzySOqzEUPH3TzRDjvpFTg",
+    password="nivbow-hudCu3-sewwat",
+    user_agent="testscript by u/lamentid",
+    username="lamentid",
 )
 
 # todo pull list of subreddits to monitor from cloud storage
@@ -54,6 +58,8 @@ def list_all_buckets():
 # test
 # list_all_buckets()
 
+# check if subreddit bucket !exist, save
+
 
 def check_save_subreddit_bucket(subreddit_id):
     subredditId = subreddit_id
@@ -70,6 +76,8 @@ def check_save_subreddit_bucket(subreddit_id):
 # check_save_subreddit_bucket("t5_123456")
 
 # upload blob as string to cloud storage *blob is any type of mime compliant file*
+
+
 def upload_json_from_string(json_as_string, bucket_name, destination_blob_name):
     storage_client = storage.Client()
     bucket = storage_client.bucket(bucket_name)
@@ -88,15 +96,58 @@ def getUtcTime():
     current_timestamp = calendar.timegm(current_timetuple)
     return current_timestamp
 
+
 # test
 print(getUtcTime())
 
-def getSubredditsToMonitor():
 
+def getSubredditsToMonitor():
+    # always in use
+    bucket_name = "comment_fetcher_config"
+    source_blob_name = "subreddits_to_monitor"
+    storage_client = storage.Client()
+    bucket = storage_client.bucket(bucket_name)
+    blob = bucket.blob(source_blob_name)
+
+    # uncomment to upload new list of subreddits
+    # data_set = '["cars", "trucks", "autos", "honda", "nissan", "ford", "kia", "tesla", "nfl", "braves", "baseball", "soccer", "hockey", "wallstreetbets", "movies"]'
+    # data_set_as_json = json.loads(data_set)
+    # print(data_set_as_json)
+    # json_as_string = json.dumps(data_set_as_json)
+    # blob.upload_from_string(json_as_string)
+
+    # uncomment to download list of subreddits
+    json_as_string = blob.download_as_string()
+    json_data = json.loads(json_as_string)
+    # json_data.append("new_subreddit")
+    return json_data
+
+
+# test
+# getSubredditsToMonitor()
+
+
+def set_blob_metadata(bucket_name, blob_name, utc_time_start, utc_time_end, number_of_comments, subreddit_id):
+    storage_client = storage.Client()
+    bucket = storage_client.bucket(bucket_name)
+    blob = bucket.get_blob(blob_name)
+    # dictionary can be sent as json
+    metadata = {}
+    utc_time_start = utc_time_start
+    utc_time_end = utc_time_end
+    number_of_comments = number_of_comments
+    subreddit_id = subreddit_id
+    for key in ["utc_time_start", "utc_time_end", "number_of_comments", "subreddit_id"]:
+        metadata[key] = eval(key)
+    blob.metadata = metadata
+    blob.patch()
+    # print("The metadata for the blob {} is {}".format(blob.name, blob.metadata))
+
+
+set_blob_metadata("comment_fetcher_config", "subreddits_to_monitor", 1630552522, 1630551922, 1000, "t5_12345")
 
 # todo uncomment to run praw
-
-# for comment in reddit.subreddit("").stream.comments():
+# for comment in reddit.subreddit("").stream.comments()
 #     # create custom comment
 #     custom_comment = {}
 
@@ -146,6 +197,3 @@ def getSubredditsToMonitor():
 #     #     custom_comment['body_html'] = str(comment.body_html)
 
 #     # todo send to cloud storage
-
-#     # print comment id to console
-#     print('{} added to google cloud storage'.format(comment.id))
