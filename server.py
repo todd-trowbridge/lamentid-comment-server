@@ -7,15 +7,17 @@ import calendar
 import datetime
 # use for json
 import json
+# use for lists in a dictionary
+from collections import defaultdict
 
 # praw setup
 reddit = praw.Reddit(
     # create a script app on reddit.com to get these values
-    client_id="",
-    client_secret="",
-    password="",
-    user_agent="",
-    username="",
+    client_id="Sebmbo0V4E9LKBEHo0NK6A",
+    client_secret="1dgyT3OUVzySOqzEUPH3TzRDjvpFTg",
+    password="nivbow-hudCu3-sewwat",
+    user_agent="testscript by u/lamentid",
+    username="lamentid",
 )
 
 # create a new bucket in a specific location
@@ -107,7 +109,7 @@ def get_subreddits_to_monitor():
     bucket = storage_client.bucket(bucket_name)
     blob = bucket.blob(source_blob_name)
 
-    # uncomment to upload new list of subreddits
+    # uncomment to upload a starter list of subreddits
     # data_set = '["cars", "trucks", "autos", "honda", "nissan", "ford", "kia", "tesla", "nfl", "braves", "baseball", "soccer", "hockey", "wallstreetbets", "movies"]'
     # data_set_as_json = json.loads(data_set)
     # print(data_set_as_json)
@@ -154,72 +156,114 @@ def convert_list_of_subreddits_to_string():
 # test
 # string_of_subreddits_to_monitor = convert_list_of_subreddits_to_string()
 
-# for loop config
-number_of_comments_to_fetch = 10
-dict_of_subreddits = {}
 
 # subreddits to monitor, fetched from cloud storage
 string_of_subreddits_to_monitor = convert_list_of_subreddits_to_string()
+print(string_of_subreddits_to_monitor)
 
-# comment fetch from reddit
-for comment in reddit.subreddit(string_of_subreddits_to_monitor).stream.comments():
-    # create custom comment
-    custom_comment = {}
-
-    # check if subreddit of comments exists already
-    for name, list_of_comments in dict_of_subreddits:
-        if name == comment.subreddit_id:
-            print("bucket {} already exists".format(index))
-        else:
-            print("creating new list for {}".format(comment.subreddit_id))
-            dict_of_subreddits[comment.subreddit_id] = []
-
-    # add custom comment properties
-    if comment.author:
-        custom_comment[u'author_id'] = str(
-            reddit.redditor(comment.author).id)
-    if comment.author:
-        custom_comment['author_name'] = str(
-            reddit.redditor(comment.author).name)
-    if comment.body:
-        custom_comment['body'] = comment.body
-    if comment.created_utc:
-        custom_comment['created_utc'] = float(comment.created_utc)
-    if comment.distinguished:
-        custom_comment['distinguished'] = comment.distinguished
-    if comment.edited:
-        custom_comment['edited'] = comment.edited
-    if comment.id:
-        custom_comment['id'] = comment.id
-        doc_ref = ""
-    if comment.is_submitter:
-        custom_comment['is_submitter'] = comment.is_submitter
-    if comment.link_id:
-        custom_comment['link_id'] = comment.link_id
-    if comment.parent_id:
-        custom_comment['parent_id'] = comment.parent_id
-    if comment.subreddit_id:
-        custom_comment['subreddit_id'] = comment.subreddit_id
-    if comment.saved:
-        custom_comment['saved'] = comment.saved
-    if comment.score:
-        custom_comment['score'] = comment.score
-    if comment.stickied:
-        custom_comment['stickied'] = comment.stickied
-
-    # uncomment to include data
-
-    # if comment.permalink: custom_comment['permalink'] = comment.permalink
-    # if comment.replies: custom_comment['replies'] = comment.replies
-    # uncomment to include data
-    # if comment.submission: custom_comment['submission'] = comment.submission
-    # if comment.subreddit: custom_comment['subreddit'] = comment.subreddit
-    # uncomment to include data
-    # if comment.body_html:
-    #     custom_comment['body_html'] = str(comment.body_html)
-
-    # push comment to batch of comments
-    
+# for loop config
+fetch_this_amount_of_comments_per_loop = 10
 
 
-    # todo send to cloud storage
+def main():
+    while True:
+        dict_of_subreddits = defaultdict(list)
+        number_of_comments_to_fetch = 10
+        while number_of_comments_to_fetch > 0:
+            try:
+                # comment fetch from reddit
+                for comment in reddit.subreddit(string_of_subreddits_to_monitor).stream.comments(skip_existing=True):
+
+                    # create custom comment
+                    custom_comment = {}
+
+                    # test
+                    # print(comment.subreddit_id)
+
+                    # check if subreddit of comments exists already
+                    if comment.subreddit_id in dict_of_subreddits:
+                        continue
+                    else:
+                        print("creating new list for {}".format(
+                            comment.subreddit_id))
+                        dict_of_subreddits[comment.subreddit_id] = []
+
+                    # add custom comment properties
+                    if comment.author:
+                        custom_comment[u'author_id'] = str(
+                            reddit.redditor(comment.author).id)
+                    if comment.author:
+                        custom_comment['author_name'] = str(
+                            reddit.redditor(comment.author).name)
+                    if comment.body:
+                        custom_comment['body'] = comment.body
+                    if comment.created_utc:
+                        custom_comment['created_utc'] = float(
+                            comment.created_utc)
+                    if comment.distinguished:
+                        custom_comment['distinguished'] = comment.distinguished
+                    if comment.edited:
+                        custom_comment['edited'] = comment.edited
+                    if comment.id:
+                        custom_comment['id'] = comment.id
+                    if comment.is_submitter:
+                        custom_comment['is_submitter'] = comment.is_submitter
+                    if comment.link_id:
+                        custom_comment['link_id'] = comment.link_id
+                    if comment.parent_id:
+                        custom_comment['parent_id'] = comment.parent_id
+                    if comment.subreddit_id:
+                        custom_comment['subreddit_id'] = comment.subreddit_id
+                    if comment.saved:
+                        custom_comment['saved'] = comment.saved
+                    if comment.score:
+                        custom_comment['score'] = comment.score
+                    if comment.stickied:
+                        custom_comment['stickied'] = comment.stickied
+
+                    # uncomment to include the following data fields
+
+                    # if comment.permalink: custom_comment['permalink'] = comment.permalink
+                    # if comment.replies: custom_comment['replies'] = comment.replies
+                    # uncomment to include data
+                    # if comment.submission: custom_comment['submission'] = comment.submission
+                    # if comment.subreddit: custom_comment['subreddit'] = comment.subreddit
+                    # uncomment to include data
+                    # if comment.body_html:
+                    #     custom_comment['body_html'] = str(comment.body_html)
+
+                    # push comment to correct list in dictionary
+                    addition_to_list = [(comment.subreddit_id, custom_comment)]
+                    for key, value in addition_to_list:
+                        dict_of_subreddits[key].append(value)
+
+                    # reset count when number of comments to fetch reaches 0
+                    # an infinite loop will exist which fetches newly added subreddits up to the number of comments to fetch
+
+                    # infinite loop will do the following when the count reaches 0
+                    #   - reset count to number_of_comments_to_fetch
+                    #   - upload comments to subreddit buckets
+                    #   - break from comment fetch loop
+                    #   - batch process comments
+                    #   - restart comment fetching with updated subreddit list from cloud storage
+
+                    # decrement count
+                    number_of_comments_to_fetch -= 1
+
+                    # + "comment id: {} ".format(comment.comment_id) + "subreddit id: {} ".format(comment.subreddit_id))
+                    print("{} comments left to fetch | comment id: {} | subreddit id: {} ".format(
+                        number_of_comments_to_fetch, comment.id, comment.subreddit_id))
+
+                    if number_of_comments_to_fetch == 0:
+                        number_of_comments_to_fetch = fetch_this_amount_of_comments_per_loop
+
+                        # exit comment fetch loop
+                        break
+            except:
+                print("praw broke, restarting fetch")
+
+            # test
+            # print(dict_of_subreddits)
+
+
+main()
