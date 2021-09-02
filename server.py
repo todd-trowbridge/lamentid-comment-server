@@ -13,11 +13,11 @@ chuckOfComments = []
 
 reddit = praw.Reddit(
     # create a script app on reddit.com to get these values
-    client_id="Sebmbo0V4E9LKBEHo0NK6A",
-    client_secret="1dgyT3OUVzySOqzEUPH3TzRDjvpFTg",
-    password="nivbow-hudCu3-sewwat",
-    user_agent="testscript by u/lamentid",
-    username="lamentid",
+    client_id="",
+    client_secret="",
+    password="",
+    user_agent="",
+    username="",
 )
 
 # todo pull list of subreddits to monitor from cloud storage
