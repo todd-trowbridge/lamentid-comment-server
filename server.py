@@ -2,8 +2,9 @@
 import praw
 # use google storage
 from google.cloud import storage
-# use io to create virtual files without saving
-import io
+# use to get current time
+import calendar
+import datetime
 
 # praw setup
 reddit = praw.Reddit(
@@ -18,6 +19,8 @@ reddit = praw.Reddit(
 # todo pull list of subreddits to monitor from cloud storage
 
 # create a new bucket in specific location with storage class
+
+
 def add_subreddit_bucket(bucket_name):
 
     storage_client = storage.Client()
@@ -33,9 +36,14 @@ def add_subreddit_bucket(bucket_name):
     )
     return new_bucket
 
+# test
+# add_subreddit_bucket("test_bucket")
+
 # lists all buckets
-def list_buckets():
-    bucket_list = []
+
+
+def list_all_buckets():
+    bucket_list = []  # bucket list ... lol
     storage_client = storage.Client()
     buckets = storage_client.list_buckets()
 
@@ -43,9 +51,13 @@ def list_buckets():
         bucket_list.append(bucket.name)
     return bucket_list
 
+# test
+# list_all_buckets()
+
+
 def check_save_subreddit_bucket(subreddit_id):
     subredditId = subreddit_id
-    bucket_list = list_buckets()
+    bucket_list = list_all_buckets()
     try:
         bucket_list.index(subreddit_id)
         print("bucket {} already exists".format(subredditId))
@@ -57,7 +69,7 @@ def check_save_subreddit_bucket(subreddit_id):
 # test
 # check_save_subreddit_bucket("t5_123456")
 
-# upload blob (any mime type) as string to 
+# upload blob as string to cloud storage *blob is any type of mime compliant file*
 def upload_json_from_string(json_as_string, bucket_name, destination_blob_name):
     storage_client = storage.Client()
     bucket = storage_client.bucket(bucket_name)
@@ -66,6 +78,21 @@ def upload_json_from_string(json_as_string, bucket_name, destination_blob_name):
 
 # test
 # upload_json_from_string('{{"hello": "world"}}', "t5_123456", "TEST BLOB")
+
+# get utc time
+
+
+def getUtcTime():
+    current_datetime = datetime.datetime.utcnow()
+    current_timetuple = current_datetime.utctimetuple()
+    current_timestamp = calendar.timegm(current_timetuple)
+    return current_timestamp
+
+# test
+print(getUtcTime())
+
+def getSubredditsToMonitor():
+
 
 # todo uncomment to run praw
 
