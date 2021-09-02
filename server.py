@@ -1,4 +1,7 @@
+# use python reddit api wrapper
 import praw
+# use google storage
+from google.cloud import storage
 
 # praw setup
 reddit = praw.Reddit(
@@ -12,7 +15,31 @@ reddit = praw.Reddit(
 
 # pull list of subreddits to monitor from firestore
 
+def create_bucket_class_location(bucket_name):
+    """Create a new bucket in specific location with storage class"""
+    # bucket_name = "your-new-bucket-name"
 
+    storage_client = storage.Client()
+
+    bucket = storage_client.bucket(bucket_name)
+    bucket.storage_class = "COLDLINE"
+    new_bucket = storage_client.create_bucket(bucket, location="us")
+
+    print(
+        "Created bucket {} in {} with storage class {}".format(
+            new_bucket.name, new_bucket.location, new_bucket.storage_class
+        )
+    )
+    return new_bucket
+
+def list_buckets():
+    """Lists all buckets."""
+
+    storage_client = storage.Client()
+    buckets = storage_client.list_buckets()
+
+    for bucket in buckets:
+        print(bucket.name)
 
 for comment in reddit.subreddit("").stream.comments():
     # create custom comment
