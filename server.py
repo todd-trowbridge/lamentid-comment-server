@@ -8,21 +8,17 @@ import datetime
 # use for json
 import json
 
-# chunk of comments to send to cloud storage
-chuckOfComments = []
-
+# praw setup
 reddit = praw.Reddit(
     # create a script app on reddit.com to get these values
-    client_id="",
-    client_secret="",
-    password="",
-    user_agent="",
-    username="",
+    client_id="Sebmbo0V4E9LKBEHo0NK6A",
+    client_secret="1dgyT3OUVzySOqzEUPH3TzRDjvpFTg",
+    password="nivbow-hudCu3-sewwat",
+    user_agent="testscript by u/lamentid",
+    username="lamentid",
 )
 
-# todo pull list of subreddits to monitor from cloud storage
-
-# create a new bucket in specific location with storage class
+# create a new bucket in a specific location
 
 
 def add_subreddit_bucket(bucket_name):
@@ -56,7 +52,9 @@ def list_all_buckets():
     return bucket_list
 
 # test
-# list_all_buckets()
+# bucket_list = list_all_buckets()
+# print(bucket_list)
+
 
 # check if subreddit bucket !exist, save
 
@@ -98,10 +96,10 @@ def getUtcTime():
 
 
 # test
-print(getUtcTime())
+# print(getUtcTime())
 
 
-def getSubredditsToMonitor():
+def get_subreddits_to_monitor():
     # always in use
     bucket_name = "comment_fetcher_config"
     source_blob_name = "subreddits_to_monitor"
@@ -143,57 +141,85 @@ def set_blob_metadata(bucket_name, blob_name, utc_time_start, utc_time_end, numb
     blob.patch()
     # print("The metadata for the blob {} is {}".format(blob.name, blob.metadata))
 
+# test
+# set_blob_metadata("comment_fetcher_config", "subreddits_to_monitor",
+#                   1630552522, 1630551922, 1000, "t5_12345")
 
-set_blob_metadata("comment_fetcher_config", "subreddits_to_monitor", 1630552522, 1630551922, 1000, "t5_12345")
 
-# todo uncomment to run praw
-# for comment in reddit.subreddit("").stream.comments()
-#     # create custom comment
-#     custom_comment = {}
+def convert_list_of_subreddits_to_string():
+    list_of_subreddits = get_subreddits_to_monitor()
+    seperator = "+"
+    return seperator.join(list_of_subreddits)
 
-#     # add custom comment properties
-#     if comment.author:
-#         custom_comment[u'author_id'] = str(reddit.redditor(comment.author).id)
-#     if comment.author:
-#         custom_comment['author_name'] = str(
-#             reddit.redditor(comment.author).name)
-#     if comment.body:
-#         custom_comment['body'] = comment.body
+# test
+# string_of_subreddits_to_monitor = convert_list_of_subreddits_to_string()
 
-#     if comment.created_utc:
-#         custom_comment['created_utc'] = float(comment.created_utc)
-#     if comment.distinguished:
-#         custom_comment['distinguished'] = comment.distinguished
-#     if comment.edited:
-#         custom_comment['edited'] = comment.edited
-#     if comment.id:
-#         custom_comment['id'] = comment.id
-#         doc_ref = ""
-#     if comment.is_submitter:
-#         custom_comment['is_submitter'] = comment.is_submitter
-#     if comment.link_id:
-#         custom_comment['link_id'] = comment.link_id
-#     if comment.parent_id:
-#         custom_comment['parent_id'] = comment.parent_id
-#     if comment.subreddit_id:
-#         custom_comment['subreddit_id'] = comment.subreddit_id
-#     if comment.saved:
-#         custom_comment['saved'] = comment.saved
-#     if comment.score:
-#         custom_comment['score'] = comment.score
-#     if comment.stickied:
-#         custom_comment['stickied'] = comment.stickied
+# for loop config
+number_of_comments_to_fetch = 10
+dict_of_subreddits = {}
 
-#     # uncomment to include data
-#     # if comment.permalink: custom_comment['permalink'] = comment.permalink
-#     # if comment.replies: custom_comment['replies'] = comment.replies
+# subreddits to monitor, fetched from cloud storage
+string_of_subreddits_to_monitor = convert_list_of_subreddits_to_string()
 
-#     # uncomment to include data
-#     # if comment.submission: custom_comment['submission'] = comment.submission
-#     # if comment.subreddit: custom_comment['subreddit'] = comment.subreddit
+# comment fetch from reddit
+for comment in reddit.subreddit(string_of_subreddits_to_monitor).stream.comments():
+    # create custom comment
+    custom_comment = {}
 
-#     # uncomment to include data
-#     # if comment.body_html:
-#     #     custom_comment['body_html'] = str(comment.body_html)
+    # check if subreddit of comments exists already
+    for name, list_of_comments in dict_of_subreddits:
+        if name == comment.subreddit_id:
+            print("bucket {} already exists".format(index))
+        else:
+            print("creating new list for {}".format(comment.subreddit_id))
+            dict_of_subreddits[comment.subreddit_id] = []
 
-#     # todo send to cloud storage
+    # add custom comment properties
+    if comment.author:
+        custom_comment[u'author_id'] = str(
+            reddit.redditor(comment.author).id)
+    if comment.author:
+        custom_comment['author_name'] = str(
+            reddit.redditor(comment.author).name)
+    if comment.body:
+        custom_comment['body'] = comment.body
+    if comment.created_utc:
+        custom_comment['created_utc'] = float(comment.created_utc)
+    if comment.distinguished:
+        custom_comment['distinguished'] = comment.distinguished
+    if comment.edited:
+        custom_comment['edited'] = comment.edited
+    if comment.id:
+        custom_comment['id'] = comment.id
+        doc_ref = ""
+    if comment.is_submitter:
+        custom_comment['is_submitter'] = comment.is_submitter
+    if comment.link_id:
+        custom_comment['link_id'] = comment.link_id
+    if comment.parent_id:
+        custom_comment['parent_id'] = comment.parent_id
+    if comment.subreddit_id:
+        custom_comment['subreddit_id'] = comment.subreddit_id
+    if comment.saved:
+        custom_comment['saved'] = comment.saved
+    if comment.score:
+        custom_comment['score'] = comment.score
+    if comment.stickied:
+        custom_comment['stickied'] = comment.stickied
+
+    # uncomment to include data
+
+    # if comment.permalink: custom_comment['permalink'] = comment.permalink
+    # if comment.replies: custom_comment['replies'] = comment.replies
+    # uncomment to include data
+    # if comment.submission: custom_comment['submission'] = comment.submission
+    # if comment.subreddit: custom_comment['subreddit'] = comment.subreddit
+    # uncomment to include data
+    # if comment.body_html:
+    #     custom_comment['body_html'] = str(comment.body_html)
+
+    # push comment to batch of comments
+    
+    
+
+    # todo send to cloud storage
