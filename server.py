@@ -15,10 +15,10 @@ reddit = praw.Reddit(
     username="lamentid",
 )
 
-# pull list of subreddits to monitor from firestore
+# todo pull list of subreddits to monitor from cloud storage
 
+# create a new bucket in specific location with storage class
 def add_subreddit_bucket(bucket_name):
-    """Create a new bucket in specific location with storage class"""
 
     storage_client = storage.Client()
 
@@ -33,8 +33,8 @@ def add_subreddit_bucket(bucket_name):
     )
     return new_bucket
 
+# lists all buckets
 def list_buckets():
-    """Lists all buckets."""
     bucket_list = []
     storage_client = storage.Client()
     buckets = storage_client.list_buckets()
@@ -55,26 +55,19 @@ def check_save_subreddit_bucket(subreddit_id):
     return ""
 
 # test
-check_save_subreddit_bucket("t5_123456")
+# check_save_subreddit_bucket("t5_123456")
 
-def upload_blob(json_as_string, bucket_name, destination_blob_name):
-    """Uploads a file to the bucket."""
-    # The ID of your GCS bucket
-    # bucket_name = "your-bucket-name"
-    # The path to your file to upload
-    # source_file_name = "local/path/to/file"
-    # The ID of your GCS object
-    # destination_blob_name = "storage-object-name"
-
+# upload blob (any mime type) as string to 
+def upload_json_from_string(json_as_string, bucket_name, destination_blob_name):
     storage_client = storage.Client()
     bucket = storage_client.bucket(bucket_name)
     blob = bucket.blob(destination_blob_name)
     blob.upload_from_string(json_as_string)
 
-#test
-upload_blob('{{"hello": "world"}}', "t5_123456", "TEST BLOB")
+# test
+# upload_json_from_string('{{"hello": "world"}}', "t5_123456", "TEST BLOB")
 
-
+# todo uncomment to run praw
 
 # for comment in reddit.subreddit("").stream.comments():
 #     # create custom comment
