@@ -11,11 +11,11 @@ import json
 # praw setup
 reddit = praw.Reddit(
     # create a script app on reddit.com to get these values
-    client_id="Sebmbo0V4E9LKBEHo0NK6A",
-    client_secret="1dgyT3OUVzySOqzEUPH3TzRDjvpFTg",
-    password="nivbow-hudCu3-sewwat",
-    user_agent="testscript by u/lamentid",
-    username="lamentid",
+    client_id="",
+    client_secret="",
+    password="",
+    user_agent="",
+    username="",
 )
 
 # create a new bucket in a specific location
@@ -220,6 +220,6 @@ for comment in reddit.subreddit(string_of_subreddits_to_monitor).stream.comments
 
     # push comment to batch of comments
     
-    
+
 
     # todo send to cloud storage
